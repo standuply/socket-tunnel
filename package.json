@@ -2,7 +2,7 @@
   "author": "Igor Perevozchikov <iperevozchikov@standuply.com>",
   "name": "@standuply/socket-tunnel",
   "description": "Tunnel HTTP Connections via socket.io streams.",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "repository": {
     "type": "git",
     "url": "git://github.com/iperevozchikov/socket-tunnel.git"
@@ -23,6 +23,10 @@
   },
   "scripts": {
     "start": "node bin/server"
+  },
+  "bin": {
+    "st-client": "./bin/client",
+    "st-server": "./bin/server"
   },
   "license": "MIT"
 }
