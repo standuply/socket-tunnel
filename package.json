@@ -1,8 +1,8 @@
 {
-  "author": "Eric Barch <ebarch@nooplabs.com>",
-  "name": "socket-tunnel",
+  "author": "Igor Perevozchikov <iperevozchikov@standuply.com>",
+  "name": "@standuply/socket-tunnel",
   "description": "Tunnel HTTP Connections via socket.io streams.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "dependencies": {
     "optimist": "^0.6.1",
     "tldjs": "2.1.X",
@@ -12,7 +12,7 @@
     "uuid": "3.1.X"
   },
   "scripts": {
-    "start": "node server.js"
+    "start": "node bin/server"
   },
   "license": "MIT"
 }
