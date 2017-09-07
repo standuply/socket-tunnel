@@ -3,6 +3,16 @@
   "name": "@standuply/socket-tunnel",
   "description": "Tunnel HTTP Connections via socket.io streams.",
   "version": "1.1.0",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/iperevozchikov/socket-tunnel.git"
+  },
+  "keywords": [
+    "stream",
+    "tunnel",
+    "socket",
+    "subdomain"
+  ],
   "dependencies": {
     "optimist": "^0.6.1",
     "tldjs": "2.1.X",
