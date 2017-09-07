@@ -11,7 +11,9 @@ Changes from the original describes in [Pull Request](https://github.com/ericbar
 ### Server
 
 1. Run ```npm i -g @standuply/socket-tunnel```
+
 2. Run ```st-server --help```
+
 ```
 Usage: node ./bin/server --hostname [string] --port [number] --subdomain [string]
 
@@ -20,7 +22,9 @@ Options:
   -p, --port       Listens port in OS                                                         [default: 3000]
   -s, --subdomain  Name of subdomain uses. It's required when server listens on a subdomain.  [default: ""]
 ```
+
 3. If using Nginx as proxy to your server, then configure Nginx by sample below:
+
 ```
 # Example of Nginx config to proxying requests to socket-tunnel server
 server {
@@ -57,13 +61,18 @@ server {
 }
 
 ```
+
 4. Add DNS entry like *.domain.com or *.subdomain.domain.com
+
 5. Run st-server with your options and enjoy :clap:
+
 
 ### Client
 
 1. Run ```npm i -g @standuply/socket-tunnel```
+
 2. Run ```st-client --help```
+
 ```
 Usage: node ./bin/client --server [string] --subdomain [string] --hostname [string] --port [number]
 
@@ -74,7 +83,9 @@ Options:
   -p, --port          (Required) Port of local server for forwarding over socket-tunnel
 
 ```
+
 3. Run st-client with your options and enjoy :clap:
+
 
 ## Credits
 
