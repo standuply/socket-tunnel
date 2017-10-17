@@ -104,7 +104,7 @@ module.exports = function(options) {
             var reqNameNormalized = requestedName.toLowerCase();
 
             // make sure the client is requesting an alphanumeric of reasonable length
-            if (/[^a-zA-Z0-9]/.test(reqNameNormalized) || reqNameNormalized.length === 0 || reqNameNormalized.length > 63) {
+            if (/[^a-zA-Z0-9-]/.test(reqNameNormalized) || reqNameNormalized.length === 0 || reqNameNormalized.length > 63) {
                 console.log(new Date() + ': ' + reqNameNormalized + ' -- bad subdomain. disconnecting client.');
                 return socket.disconnect();
             }
