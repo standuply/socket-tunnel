@@ -100,7 +100,7 @@ module.exports = function(options) {
     });
 
     // socket.io instance
-    const io = require('socket.io')(server);
+    const io = require('socket.io')(server, { allowEIO3: true });
     io.on('connection', function (socket) {
         socket.on('createTunnel', function (requestedName) {
             if (socket.requestedName) {
