@@ -18,6 +18,11 @@ var argv = optimist
         default: '',
         describe: "Name of subdomain uses. It's required when server listens on a subdomain."
     })
+    .options('d', {
+        alias: 'dev',
+        default: false,
+        describe: 'Development mode for local testing purposes (uses subdomain arg instead of tldjs)'
+    })
     .argv;
 
 if (argv.help) {

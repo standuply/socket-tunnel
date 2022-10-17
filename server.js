@@ -1,15 +1,16 @@
-module.exports = function(options) {
-    // libs
-    var http = require('http');
-    var tldjs = require('tldjs');
-    var ss = require('socket.io-stream');
-    var uuid = require('uuid/v4');
+// libs
+const http = require('http');
+const tldjs = require('tldjs');
+const ss = require('socket.io-stream');
+const uuid = require('uuid/v4');
 
+
+module.exports = function(options) {
     // association between subdomains and socket.io sockets
-    var socketsByName = {};
+    const socketsByName = {};
 
     // bounce incoming http requests to socket.io
-    var server = http.createServer(function (req, res) {
+    const server = http.createServer(function (req, res) {
         // without a hostname, we won't know who the request is for
         var hostname = req.headers.host;
         if (!hostname) {
@@ -18,20 +19,27 @@ module.exports = function(options) {
         }
 
         // make sure we received a subdomain
-        var subdomain = tldjs.getSubdomain(hostname);
-        if (!subdomain) {
-            res.statusCode = 502;
-            return res.end('Invalid subdomain');
-        }
+        let subdomain;
 
-        // tldjs library return subdomain as all subdomain path from the main domain.
-        // Example:
-        // 1. super.example.com = super
-        // 2. my.super.example.com = my.super
-        // If want to run tunnel server on subdomain, then must use option serverSubdomainHost
-        // and correctly trim returned subdomain by tldjs
-        if (options['subdomain']) {
-            subdomain = subdomain.replace('.' + options['subdomain'], '');
+        if (options['dev']) {
+            subdomain = options['subdomain'];
+        } else {
+            subdomain = tldjs.getSubdomain(hostname);
+            if (!subdomain) {
+                res.statusCode = 502;
+                console.error('Invalid subdomain')
+                return res.end('Invalid subdomain');
+            }
+    
+            // tldjs library return subdomain as all subdomain path from the main domain.
+            // Example:
+            // 1. super.example.com = super
+            // 2. my.super.example.com = my.super
+            // If want to run tunnel server on subdomain, then must use option serverSubdomainHost
+            // and correctly trim returned subdomain by tldjs
+            if (options['subdomain']) {
+                subdomain = subdomain.replace('.' + options['subdomain'], '');
+            }
         }
 
         var clientId = subdomain.toLowerCase();
@@ -92,7 +100,7 @@ module.exports = function(options) {
     });
 
     // socket.io instance
-    var io = require('socket.io')(server);
+    const io = require('socket.io')(server, { allowEIO3: true });
     io.on('connection', function (socket) {
         socket.on('createTunnel', function (requestedName) {
             if (socket.requestedName) {
@@ -130,8 +138,10 @@ module.exports = function(options) {
         });
     });
 
-    // http server
-    server.listen(options['port'], options['host']);
+    server.listen(options['port'], options['hostname']);
+    server.on('error', (e) => {
+        console.error(e)
+    });
 
     console.log(new Date() + ': socket-tunnel server started on port ' + options['port']);
-};
+}
