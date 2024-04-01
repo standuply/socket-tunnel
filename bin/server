@@ -11,7 +11,12 @@ var argv = optimist
     .options('p', {
         alias: 'port',
         default: 3000,
-        describe: 'Listens port in OS'
+        describe: 'Listens port for incoming http/ws connections'
+    })
+    .options('tp', {
+        alias: 'tunnelport',
+        default: 3001,
+        describe: 'Listens port for tunneling. st-client connects to this port.'
     })
     .options('s', {
         alias: 'subdomain',

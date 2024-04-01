@@ -12,38 +12,15 @@ module.exports = function(options) {
     // bounce incoming http requests to socket.io
     const server = http.createServer(function (req, res) {
         // without a hostname, we won't know who the request is for
-        var hostname = req.headers.host;
+        const hostname = req.headers.host;
         if (!hostname) {
             res.statusCode = 502;
             return res.end('Invalid hostname');
         }
 
-        // make sure we received a subdomain
-        let subdomain;
-
-        if (options['dev']) {
-            subdomain = options['subdomain'];
-        } else {
-            subdomain = tldjs.getSubdomain(hostname);
-            if (!subdomain) {
-                res.statusCode = 502;
-                console.error('Invalid subdomain')
-                return res.end('Invalid subdomain');
-            }
-    
-            // tldjs library return subdomain as all subdomain path from the main domain.
-            // Example:
-            // 1. super.example.com = super
-            // 2. my.super.example.com = my.super
-            // If want to run tunnel server on subdomain, then must use option serverSubdomainHost
-            // and correctly trim returned subdomain by tldjs
-            if (options['subdomain']) {
-                subdomain = subdomain.replace('.' + options['subdomain'], '');
-            }
-        }
-
-        var clientId = subdomain.toLowerCase();
-        var client = socketsByName[clientId];
+        const subdomain = getSubdomain(options);
+        const clientId = subdomain.toLowerCase();
+        const client = socketsByName[clientId];
 
         // no such subdomain
         // we use a 502 error to the client to signify we can't service the request
@@ -51,7 +28,7 @@ module.exports = function(options) {
             res.statusCode = 502;
             res.end(clientId + ' is currently unregistered or offline.');
         } else {
-            var requestGUID = uuid();
+            const requestGUID = uuid();
 
             client.emit('incomingClient', requestGUID);
 
@@ -64,7 +41,7 @@ module.exports = function(options) {
                 // Pipe all data from tunnel stream to requesting connection
                 stream.pipe(req.connection);
 
-                var postData = [];
+                const postData = [];
 
                 // Collect data of POST/PUT request to array buffer
                 req.on('data', function(data) {
@@ -73,13 +50,13 @@ module.exports = function(options) {
 
                 // Proxy ended GET/POST/PUT/DELETE request to tunnel stream
                 req.on('end', function() {
-                    var messageParts = [];
+                    const messageParts = [];
 
                     // Push request data
                     messageParts.push([req.method + ' ' + req.url + ' HTTP/' + req.httpVersion]);
 
                     // Push headers data
-                    for (var i = 0; i < (req.rawHeaders.length-1); i += 2) {
+                    for (let i = 0; i < (req.rawHeaders.length-1); i += 2) {
                         messageParts.push(req.rawHeaders[i] + ': ' + req.rawHeaders[i+1]);
                     }
                     // Push delimiter
@@ -91,7 +68,7 @@ module.exports = function(options) {
                     // Push delimiter
                     messageParts.push('');
 
-                    var message = messageParts.join('\r\n');
+                    const message = messageParts.join('\r\n');
 
                     stream.write(message);
                 });
@@ -99,8 +76,57 @@ module.exports = function(options) {
         }
     });
 
+    server.on('upgrade', (req, socket, head) => {
+        const subdomain = getSubdomain(options);
+        const clientId = subdomain.toLowerCase();
+        const client = socketsByName[clientId];
+        const requestGUID = uuid();
+
+        client.emit('incomingClient', requestGUID);
+
+        ss(client).once(requestGUID, function (tunnelStream) {
+            tunnelStream.on('error', function () {
+                req.destroy();
+                tunnelStream.destroy();
+            });
+
+            const messageParts = [];
+
+            // Push request data
+            messageParts.push([req.method + ' ' + req.url + ' HTTP/' + req.httpVersion]);
+
+            // Push headers data
+            for (let i = 0; i < (req.rawHeaders.length-1); i += 2) {
+                messageParts.push(req.rawHeaders[i] + ': ' + req.rawHeaders[i+1]);
+            }
+            // Push delimiter
+            messageParts.push('');
+
+            // Push request body data
+           // messageParts.push(Buffer.concat(postData).toString());
+
+            // Push delimiter
+            messageParts.push('');
+
+            const message = messageParts.join('\r\n');
+
+            tunnelStream.write(message);
+
+            socket.pipe(tunnelStream);
+            tunnelStream.pipe(socket);
+
+            socket.on('end', _ => {
+                req.destroy();
+                tunnelStream.destroy();
+            })
+        });
+
+    });
+
+    const tunnelServer = http.createServer();
+
     // socket.io instance
-    const io = require('socket.io')(server, { allowEIO3: true });
+    const io = require('socket.io')(tunnelServer, { allowEIO3: true });
     io.on('connection', function (socket) {
         socket.on('createTunnel', function (requestedName) {
             if (socket.requestedName) {
@@ -143,5 +169,36 @@ module.exports = function(options) {
         console.error(e)
     });
 
+    tunnelServer.listen(options['tunnelport'], options['hostname']);
+    tunnelServer.on('error', (e) => {
+        console.error(e)
+    });
+
     console.log(new Date() + ': socket-tunnel server started on port ' + options['port']);
+}
+
+function getSubdomain(options) {
+    // make sure we received a subdomain
+    let subdomain;
+
+    if (options['dev']) {
+        subdomain = options['subdomain'];
+    } else {
+        subdomain = tldjs.getSubdomain(hostname);
+        if (!subdomain) {
+            throw new Error('Invalid subdomain');
+        }
+
+        // tldjs library return subdomain as all subdomain path from the main domain.
+        // Example:
+        // 1. super.example.com = super
+        // 2. my.super.example.com = my.super
+        // If want to run tunnel server on subdomain, then must use option serverSubdomainHost
+        // and correctly trim returned subdomain by tldjs
+        if (options['subdomain']) {
+            subdomain = subdomain.replace('.' + options['subdomain'], '');
+        }
+    }
+
+    return subdomain;
 }

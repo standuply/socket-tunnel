@@ -11,6 +11,10 @@ module.exports = function (options) {
         socket.emit('createTunnel', options['subdomain']);
     });
 
+    socket.on('connect_error', function (err) {
+        console.log(new Date() + ': connection error: ' + err);
+    });
+
     socket.on('incomingClient', function (clientId) {
         var client = net.connect(options['port'], options['hostname'], function () {
             var s = ss.createStream();
