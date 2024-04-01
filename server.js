@@ -18,7 +18,7 @@ module.exports = function(options) {
             return res.end('Invalid hostname');
         }
 
-        const subdomain = getSubdomain(options);
+        const subdomain = getSubdomain(options, hostname);
         const clientId = subdomain.toLowerCase();
         const client = socketsByName[clientId];
 
@@ -77,7 +77,13 @@ module.exports = function(options) {
     });
 
     server.on('upgrade', (req, socket, head) => {
-        const subdomain = getSubdomain(options);
+        // without a hostname, we won't know who the request is for
+        const hostname = req.headers.host;
+        if (!hostname) {
+            res.statusCode = 502;
+            return res.end('Invalid hostname');
+        }
+        const subdomain = getSubdomain(options, hostname);
         const clientId = subdomain.toLowerCase();
         const client = socketsByName[clientId];
         const requestGUID = uuid();
@@ -177,7 +183,7 @@ module.exports = function(options) {
     console.log(new Date() + ': socket-tunnel server started on port ' + options['port']);
 }
 
-function getSubdomain(options) {
+function getSubdomain(options, hostname) {
     // make sure we received a subdomain
     let subdomain;
 
