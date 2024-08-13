@@ -1,8 +1,11 @@
+const net = require("net");
 module.exports = function (options) {
     // require the things we need
     var net = require('net');
     var ss = require('socket.io-stream');
-    var socket = require('socket.io-client')(options['server']);
+    var socket = require('socket.io-client')(options['server'], {
+        transports: ["websocket"]
+    });
 
     socket.on('connect', function () {
         console.log(new Date() + ': connected');
@@ -15,13 +18,43 @@ module.exports = function (options) {
         console.log(new Date() + ': connection error: ' + err);
     });
 
+    const client = net.connect({
+        port: options['port'],
+        host: options['hostname'],
+        highWaterMark: 1024 * 1024
+    });
+
     socket.on('incomingClient', function (clientId) {
-        var client = net.connect(options['port'], options['hostname'], function () {
-            var s = ss.createStream();
+        const client = net.connect({
+            port: options['port'],
+            host: options['hostname'],
+            highWaterMark: 1024 * 1024
+        }, function () {
+            const s = ss.createStream({
+                highWaterMark: 1024 * 1024
+            });
+
+            // const superRead = client._read.bind(client);
+            // client._read = function (n) {
+            //     console.log('client._read');
+            //     superRead(n);
+            // };
+
+            let size = 0;
+            client.on('data', function (data) {
+                size += data.length;
+                console.log(clientId+ ' received ' + size/1024 + 'KB');
+            });
+
             s.pipe(client).pipe(s);
 
             s.on('end', function () {
+                console.log(clientId + ' end');
                 client.destroy();
+            });
+
+            client.on('end', function () {
+                //s.destroy();
             });
 
             ss(socket).emit(clientId, s);

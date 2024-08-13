@@ -4,7 +4,6 @@ const tldjs = require('tldjs');
 const ss = require('socket.io-stream');
 const uuid = require('uuid/v4');
 
-
 module.exports = function(options) {
     // association between subdomains and socket.io sockets
     const socketsByName = {};
@@ -17,6 +16,8 @@ module.exports = function(options) {
             res.statusCode = 502;
             return res.end('Invalid hostname');
         }
+
+        //console.log(req.url);
 
         const subdomain = getSubdomain(options, hostname);
         const clientId = subdomain.toLowerCase();
@@ -33,7 +34,9 @@ module.exports = function(options) {
             client.emit('incomingClient', requestGUID);
 
             ss(client).once(requestGUID, function (stream) {
-                stream.on('error', function () {
+                req.connection.setMaxListeners(100)
+                stream.on('error', function (err) {
+                    console.error(err);
                     req.destroy();
                     stream.destroy();
                 });
@@ -41,7 +44,21 @@ module.exports = function(options) {
                 // Pipe all data from tunnel stream to requesting connection
                 stream.pipe(req.connection);
 
+                let size = 0;
+                stream.on('data', function (data) {
+                    size += data.length;
+                    console.log(clientId+ ' received ' + size/1024 + 'KB');
+                });
+
                 const postData = [];
+                //
+                // const requestName = req.method + ' ' + req.url + ' HTTP/' + req.httpVersion + ' ' + requestGUID;
+                // console.time(requestName);
+                //
+                // stream.on('end', function() {
+                //     console.timeEnd(requestName);
+                // });
+
 
                 // Collect data of POST/PUT request to array buffer
                 req.on('data', function(data) {
@@ -70,10 +87,16 @@ module.exports = function(options) {
 
                     const message = messageParts.join('\r\n');
 
+                    //console.log(message)
+
                     stream.write(message);
+
+                    //console.timeEnd(requestName);
                 });
             });
         }
+    }, {
+        keepAlive: true
     });
 
     server.on('upgrade', (req, socket, head) => {
@@ -86,6 +109,10 @@ module.exports = function(options) {
         const subdomain = getSubdomain(options, hostname);
         const clientId = subdomain.toLowerCase();
         const client = socketsByName[clientId];
+        if (!client) {
+            socket.end();
+            return;
+        }
         const requestGUID = uuid();
 
         client.emit('incomingClient', requestGUID);
@@ -129,10 +156,15 @@ module.exports = function(options) {
 
     });
 
-    const tunnelServer = http.createServer();
+    const tunnelServer = http.createServer({
+        keepAlive: true
+    });
 
     // socket.io instance
-    const io = require('socket.io')(tunnelServer, { allowEIO3: true });
+    const io = require('socket.io')(tunnelServer, {
+        allowEIO3: true,
+        //transports: ['websocket']
+    });
     io.on('connection', function (socket) {
         socket.on('createTunnel', function (requestedName) {
             if (socket.requestedName) {
