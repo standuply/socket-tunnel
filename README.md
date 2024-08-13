@@ -2,6 +2,10 @@
 
 Tunnel HTTP Connections via socket.io streams.
 
+
+**Note:** this doc may be outdated. Look at `DEV.md` for the latest instructions.
+
+
 It's a fork of not popular, but very strong implementation of tunneling requests over socket.io. Original [repo](https://github.com/ericbarch/socket-tunnel).
 
 Changes from the original describes in [Pull Request](https://github.com/ericbarch/socket-tunnel/pull/2)
