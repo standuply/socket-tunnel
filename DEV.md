@@ -1,5 +1,14 @@
 # Socket Tunnel Setup Instructions
 
+## Prerequisites
+
+Before starting, add the following line to your `/etc/hosts` file:
+
+```
+127.0.0.1 test.localhost
+```
+
+
 ## Running the Server
 
 To run the server, use the following command:
