@@ -2,7 +2,7 @@
   "author": "Standuply <devs@standuply.com>",
   "name": "@standuply/socket-tunnel",
   "description": "Tunnel HTTP Connections via socket.io streams.",
-  "version": "2.1.4",
+  "version": "2.1.5",
   "repository": {
     "type": "git",
     "url": "git://github.com/standuply/socket-tunnel.git"
