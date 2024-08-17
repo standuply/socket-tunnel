@@ -44,11 +44,11 @@ module.exports = function(options) {
                 // Pipe all data from tunnel stream to requesting connection
                 stream.pipe(req.connection);
 
-                let size = 0;
-                stream.on('data', function (data) {
-                    size += data.length;
-                    console.log(clientId+ ' received ' + size/1024 + 'KB');
-                });
+                // let size = 0;
+                // stream.on('data', function (data) {
+                //     size += data.length;
+                //     console.log(clientId+ ' received ' + size/1024 + 'KB');
+                // });
 
                 const postData = [];
                 //
@@ -156,6 +156,11 @@ module.exports = function(options) {
 
     });
 
+    server.on('error', (e) => {
+        console.error(e)
+    });
+    server.listen(options['port'], options['hostname']);
+
     const tunnelServer = http.createServer({
         keepAlive: true
     });
@@ -200,11 +205,6 @@ module.exports = function(options) {
                 console.log(new Date() + ': ' + socket.requestedName + ' unregistered');
             }
         });
-    });
-
-    server.listen(options['port'], options['hostname']);
-    server.on('error', (e) => {
-        console.error(e)
     });
 
     tunnelServer.listen(options['tunnelport'], options['hostname']);
