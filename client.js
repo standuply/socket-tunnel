@@ -66,12 +66,12 @@ module.exports = function (options) {
     });
 
     socket.on('incomingClient', (clientId) => {
-        console.log(`incomingClient: ${clientId}`);
+        // console.log(`incomingClient: ${clientId}`);
         const client = net.connect({
             port: options.port,
             host: options.hostname,
         }, () => {
-            console.log(`${clientId} connected to ${options.hostname}:${options.port}`);
+            //console.log(`${clientId} connected to ${options.hostname}:${options.port}`);
             const s = ss.createStream({ highWaterMark: 512 * 1024 });
 
             // let size = 0;
